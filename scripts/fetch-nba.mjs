@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 从 balldontlie 拉取一个 NBA 赛季的赛程，精简后写入 sports/nba-<赛季>.json。
-// 只输出赛程（时间、对阵、常规赛 / 季后赛、状态），不输出比分和统计：
+// 只输出赛程（时间、对阵、常规赛 / 季后赛、状态）和已结束比赛的最终比分；不输出每节比分、球员和技术统计：
 // 这份文件只给 TabTerrace 扩展用，不是替代 balldontlie 的数据接口（见其服务条款第 6 条）。
 //
 // 用法：BALLDONTLIE_KEY=xxx node scripts/fetch-nba.mjs [赛季开始年份]
@@ -32,6 +32,9 @@ export function slim(game) {
   const home = team(game.home_team), away = team(game.visitor_team);
   if (!home.abbr || !away.abbr) return null;
   const state = game.postponed === true ? 'postponed' : STATES.has(game.status_state) ? game.status_state : 'scheduled';
+  // 只有已结束的比赛给最终比分；进行中的比分我们更新不够快，不给
+  const score = state === 'final' && Number.isSafeInteger(game.home_team_score) && Number.isSafeInteger(game.visitor_team_score)
+    ? { home: game.home_team_score, away: game.visitor_team_score } : null;
   return {
     id: game.id,
     // 有确切开赛时间时给 UTC；还没定时间（常见于季后赛）只给日期
@@ -40,6 +43,7 @@ export function slim(game) {
     home, away,
     postseason: game.postseason === true,
     state,
+    score,
   };
 }
 

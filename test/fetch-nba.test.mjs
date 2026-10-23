@@ -14,11 +14,14 @@ test('赛季按开始年份推算：8 月起是新赛季', () => {
   assert.equal(seasonFor(new Date('2027-08-01T00:00:00Z')), 2027);
 });
 
-test('只输出赛程字段，不带比分和统计', () => {
-  assert.deepEqual(slim(game(1, { home_team_score: 110, status_state: 'final' })), {
+test('只输出赛程和已结束比赛的最终比分，不带每节比分和统计', () => {
+  assert.deepEqual(slim(game(1, { home_team_score: 110, visitor_team_score: 104, home_q1: 30, status_state: 'final' })), {
     id: 1, start: '2026-10-21T23:30:00.000Z', date: '2026-10-21',
     home: { abbr: 'BOS', name: 'Boston Celtics' }, away: { abbr: 'LAL', name: 'Los Angeles Lakers' }, postseason: false, state: 'final',
+    score: { home: 110, away: 104 },
   });
+  assert.equal(slim(game(2, { home_team_score: 50, visitor_team_score: 48, status_state: 'in_progress' })).score, null, '进行中不给比分');
+  assert.equal(slim(game(3)).score, null, '未开赛不给比分');
 });
 
 test('延期以 postponed 字段为准；未定时间只留日期；缺队伍丢弃', () => {

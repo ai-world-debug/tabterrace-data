@@ -7,7 +7,7 @@
 | `sports/index.json` | 当前有哪些赛程文件、更新时间、比赛数 |
 | `sports/nba-<赛季>.json` | NBA 一个赛季的赛程（赛季按开始年份，`nba-2026.json` 是 2026-27 赛季） |
 
-每场比赛只有赛程字段：`id`、`start`（UTC 开赛时间，未定时为 `null`）、`date`、`home` / `away`（`abbr` 三字母缩写、`name` 全称）、`postseason`、`state`（`scheduled` / `in_progress` / `final` / `postponed` / `canceled` 等）。不含比分和统计。
+每场比赛只有赛程字段：`id`、`start`（UTC 开赛时间，未定时为 `null`）、`date`、`home` / `away`（`abbr` 三字母缩写、`name` 全称）、`postseason`、`state`（`scheduled` / `in_progress` / `final` / `postponed` / `canceled` 等）、`score`（已结束比赛的最终比分 `{home, away}`，其他为 `null`）。不含每节比分、球员和技术统计。
 
 数据来自 [balldontlie](https://www.balldontlie.io/)，按其服务条款整理后供 TabTerrace 使用。赛程可能变动，以 NBA 官方为准。
 
