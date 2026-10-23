@@ -1,0 +1,51 @@
+name: 更新 NBA 赛程
+
+on:
+  schedule:
+    # 每天两次：UTC 22:00、10:00（北京时间 6:00、18:00）
+    - cron: '0 22 * * *'
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      season:
+        description: '赛季开始年份（留空按当前日期推算，例如 2026 = 2026-27 赛季）'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nba
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test test/*.test.mjs
+      - name: 拉取赛程
+        env:
+          BALLDONTLIE_KEY: ${{ secrets.BALLDONTLIE_KEY }}
+        run: node scripts/fetch-nba.mjs ${{ github.event.inputs.season }}
+      - name: 有变化才提交
+        run: |
+          git config user.name "tabterrace-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sports/
+          if git diff --cached --quiet; then
+            # 公开仓库 60 天没有提交，定时任务会被 GitHub 自动停用；每月 1 日保底提交一次
+            if [ "$(date -u +%d)" = "01" ] && [ "$(date -u +%H)" -lt 12 ]; then
+              date -u +%Y-%m-%dT%H:%M:%SZ > sports/.heartbeat
+              git add sports/.heartbeat
+              git commit -m "保持定时任务运行"
+              git push
+            fi
+          else
+            git commit -m "更新 NBA 赛程"
+            git push
+          fi
